@@ -34,3 +34,17 @@ CORS(app)
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
+class Admin(db.Model):
+  id = db.Column(db.Integer, primary_key=True)
+  first_name = db.Column(db.String(16), nullable=False)
+  last_name = db.Column(db.String(16), nullable=False)
+  email = db.Column(db.String(48), nullable=False)
+  password = db.Column(db.String(32), nullable=False)
+  king = db.Column(db.Boolean)
+
+  def __init__(self, first_name, last_name, email, password, king):
+    self.first_name = first_name
+    self.last_name = last_name
+    self.email = email
+    self.password = password
+    self.king = king
