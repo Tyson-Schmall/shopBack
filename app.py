@@ -21,7 +21,7 @@ heroku = Heroku(app)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "app.sqlite")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False # This simply 
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False # This simply removes a warning that generates when running certain commands in the terminal.
 
 # CORS is short for cross origin resource sharing. This is a fancy title, it let's us communicate across
 # multiple platforms.
@@ -58,12 +58,13 @@ class Artist(db.Model):
   # user information, because each owner would be creating their own 'instance' of a user. Tyson would create his own instance with his own user 
   # credentials, and Joe would create his own instance with his user credentials. They would be totally individual of each other.
 
-  def __init__(self, first_name, last_name, email, password, king):
+  def __init__(self, first_name, last_name, email, password, admin_artist, children):
     self.first_name = first_name
     self.last_name = last_name
     self.email = email
     self.password = password
-    self.king = king
+    self.admin_artist = admin_artist
+    self.children = children
 
 # Below is our Schema for the Artist class. Marshmallow is the dependency that allows for us to make up a Schema class. The Schema class
 # is what maps out our database model,
@@ -106,7 +107,13 @@ class ArtistContentSchema(ma.Schema):
 content_schema = ArtistContentSchema()
 all_content_schema = ArtistContentSchema(many=True)
 
+@app.route("/")
+def home_page():
+  return "<h3>Test route, test is successful<h3>"
 
+if __name__=="__main__":
+  app.debug = True
+  app.run()
 
 
 
