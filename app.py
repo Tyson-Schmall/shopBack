@@ -107,9 +107,57 @@ class ArtistContentSchema(ma.Schema):
 content_schema = ArtistContentSchema()
 all_content_schema = ArtistContentSchema(many=True)
 
+# Below, is the beginning of our routes being built. These routes will dictate where a user is sent when clicking in certain places,
+# or on certain buttons/in certain fields of our app. The first one you see here, is simply a test. This allows me to make use of
+# a program called 'postman', which let's me check from my local environment whether or not these routes are functioning the way we
+# intend for them to.
+
 @app.route("/")
 def home_page():
   return "<h3>Test route, test is successful<h3>"
+
+# Below, is the route we are building in that allows an individual to see every single artist that is registered and logged in
+# this database. I tested it in Postman, and it functions as it needs to.
+
+@app.route("/artists", methods=["GET"])
+def render_artists():
+  all_artists = Artist.query.all()
+  result = artists_schema.dump(all_artists)
+
+  return jsonify(result)
+
+# Below, the route listed is to display a single artist, that can be specifically requested by a user operating the front-end of
+# this app. The below has been tested in Postman and funcitons as it needs to. 
+
+@app.route("/artist/<id>", methods=["GET"])
+def render_artist(id):
+  artist = Artist.query.get(id)
+  result = artist_schema.dump(artist)
+
+  return jsonify(result)
+
+# The below route is how to add a user into the database dynamically, but the issue for now is that the children attribute on line
+# 149 is causing hiccups. I must have an error with the way 'children' was established up top, so i will have to look into this.
+# In the meantime, will push to github since everything else prior to the below block of code functions properly.
+
+@app.route("/add_artist", methods=["POST"])
+def add_artist():
+  first_name = request.json["first_name"]
+  last_name = request.json["last_name"]
+  email = request.json["email"]
+  password = request.json["password"]
+  admin_artist = request.json["admin_artist"]
+  children = request.json["children"]
+
+  new_artist = Artist(first_name, last_name, email, password, admin_artist, children)
+
+  db.session.add(new_artist)
+  db.session.commit()
+  
+  artist = Artist.query.get(new_artist.id)
+  return todo_schema.jsonify(todo)  
+
+
 
 if __name__=="__main__":
   app.debug = True
