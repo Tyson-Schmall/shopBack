@@ -37,25 +37,21 @@ ma = Marshmallow(app)
 # Below the tables are being built. These tables are structured to withhold and store certain types of data
 # in certain combinations, to create certain behaviours and reactions when users perform specific actions.
 
-# The first table, 'Owner', this is for the owner of a shop. This individual will be the owner of the shop, the one who employs
-# everyone else. We need to be able to store their information as a user, so the database acquires this information.
-# First&Last name, email, password, these are all crucial identifying factors that should be unique.
+# The first table, 'Artist', this is for the artists of a shop. The individual with the 'admin_artist' value set to
+# 'true', will be the owner of the shop, and will be able to remove other Artist's if they so choose. 
 
-# The 'king' and 'children' variables, are for different purposes. The 'king' variable, is a Boolean data type. This means 'true' or 'false'.
-# With 'king' in place, we are able to perform checks when certain users want to perform certain actions. For example, if the Owner needs to
-# remove an employee who recently vacated their position, the Owner should be able to do that. Right? But what ensures that an 'Artist' doesn't
-# go and try to do the same thing? That's what 'king' is for. 'King' will be unique to the 'Owner' class, and the only way this system will
-# allow the removal of an artist, is if the 'king' value is set to 'True'. We will build the rest of that functionality out later, but for
-# now, this is where we begin creating the 'king' functionality we will seek later on.
+# If the head of the shop (owner, manager, whichever title they carry) needs to remove another Artist due to their position
+# being vacated, I will have the system check the 'admin_artist' attribute, and allow the removal of another Artist, only
+# if the requesting Artist has the 'admin_artist' attribute set to 'true'.
 
-class Owner(db.Model):
+class Artist(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   first_name = db.Column(db.String(16), nullable=False)
   last_name = db.Column(db.String(16), nullable=False)
   email = db.Column(db.String(48), nullable=False)
   password = db.Column(db.String(32), nullable=False)
-  king = db.Column(db.Boolean)
-  children = db.relationship("Artist", backref="owner")
+  admin_artist = db.Column(db.Boolean)
+  children = db.relationship("ArtistContent", backref="artist")
 
   # Below, the __init__ is us stating that for each time we 'instantiate' this class into a variable, we want the 'instance' of this class to be
   # unique to whatever variable we have instantiated the class into. So if a shop has two Owner's, each one would be able to create their own 
@@ -69,38 +65,57 @@ class Owner(db.Model):
     self.password = password
     self.king = king
 
+# Below is our Schema for the Artist class. Marshmallow is the dependency that allows for us to make up a Schema class. The Schema class
+# is what maps out our database model,
 
-# Below we have the Artist class. An "Artist" can only be created by an "Owner". The Artist will need certain information put in by an "Owner"
-# in order to get up and running initially. 
+class ArtistSchema(ma.Schema):
+  class Meta:
+    fields = ("id", "first_name", "last_name", "email", "password", "admin_artist", "children")
 
-class Artist(db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  first_name = db.Column(db.String(16), nullable=False)
-  last_name = db.Column(db.String(16), nullable=False)
-  email = db.Column(db.String(48), nullable=False)
-  password = db.Column(db.String(32), nullable=False)
-  auth = db.Column(db.Boolean)
-  owner_id = db.Column(db.Integer, db.ForeignKey("owner.id"), nullable=False)
-  children = db.relationship("ArtistContent", backref="artist")
+# Below, the declared ArtistSchema class has been instantiated into two separate variables. The first, will be used to query for a specific 
+# Artist. The second, is used to query for ALL registered Artists within the database. 
 
-  # Artist's will have a children relationship with the "ArtistContent" table. This will ensure that Artist's are allowed to udpate aspects
-  # of their online portfolio/profile page.
+artist_schema = ArtistSchema()
+artists_schema = ArtistSchema(many=True)
 
-  def __init__(self, first_name, last_name, email, password, auth):
-    self.first_name = first_name
-    self.last_name = last_name
-    self.email = email
-    self.password = password
-    self.auth = auth
-
-# Below table is not finished out yet, I had to put this on hold temporarily. Will put in further work and description of said work when 
-# further time is available. Thanks!
+# Below table is for the content that each artist should have entailed on the website about them. An image,
+# a short-ish bio, their name, and the 'artist_id' column is for the purpose of the relationship between the
+# below table, and the above one. The 'artist_id' interacts directly with 'children' in the above table. 
 
 class ArtistContent(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   cover_image = db.Column(db.String(500), nullable=False)
   artist_name = db.Column(db.String(64), nullable=False)
   bio = db.Column(db.String(666), nullable=False)
+  artist_id = db.Column(db.Integer, db.ForeignKey("artist.id"), nullable=False)
+
+  def __init__(self, cover_image, artist_name, bio, artist_id):
+    self.cover_image = cover_image
+    self.artist_name = artist_name
+    self.bio = bio
+    self.artist_id = artist_id
+
+# Just like the prior Schema class we built out, the below is a Schema for the ArtistContent class above. 
+# We then take the schema class, and instantiate it into two variables. One to query for a single schema,
+# the other to query for all information contained within this specific schema class.
+
+class ArtistContentSchema(ma.Schema):
+  class Meta:
+    fields = ("id", "cover_image", "artist_name", "bio", "artist_id")
+
+content_schema = ArtistContentSchema()
+all_content_schema = ArtistContentSchema(many=True)
+
+
+
+
+
+
+
+
+
+
+  
 
 
 
