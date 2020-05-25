@@ -184,6 +184,69 @@ def remove_artist(id):
 
   return jsonify("This artist has been removed")
 
+# Below is the POST route for adding an artist's biographical type of information. Just a quick intro
+# about an artist before somebody decides to book with them. 
+
+@app.route("/artist_bio", methods=["POST"])
+def create_bio():
+  cover_image = request.json["cover_image"]
+  artist_name = request.json["artist_name"]
+  bio = request.json["bio"]
+
+  new_content = ArtistContent(cover_image, artist_name, bio)
+
+  db.session.add(new_content)
+  db.session.commit()
+
+  content = ArtistContent.query.get(new_conent.id)
+  return all_content_schema.jsonify(content)
+
+# Below is the GET route to get a single artist's content by it's id.
+
+@app.route("/artist_content/<id>", methods=["GET"])
+def artist_content(id):
+  content = ArtistContent.query.get(id)
+  result = content_schema.dump(content)
+
+  return jsonify(result)
+
+# Below is the route to GET ALL the artist content that is on the website/in the database.
+
+@app.route("/artist_content", methods=["GET"])
+def all_artist_content():
+  all_content = ArtistContent.query.all()
+  result = all_content_schema.dump(all_content)
+
+  return jsonify(result)
+
+# Below is the route to PATCH or to EDIT an artist's content that is on the site.
+
+@app.route("/artist_content/<id>", methods=["PATCH"])
+def edit_content():
+  content = ArtistContent.query.get(id)
+  
+  new_cover_image = request.json["cover_image"]
+  new_artist_name = request.json["artist_name"]
+  new_bio = request.json["bio"]
+
+  content.cover_image = new_cover_image
+  content.artist_name = new_artist_name
+  content.bio = new_bio
+
+  db.session.commit()
+  return artist_schema.jsonify(content)
+
+# The below route is the DELETE route. It is used to remove artist's content when 
+# necessary from the website. 
+
+@app.route("/remove_content", methods=["DELETE"])
+def remove_content():
+  content = ArtistContent.query.get(id)
+
+  db.session.delete(content)
+  db.session.commit()
+
+  return jsonify("The Artist's Content has been successfully removed")
 
 if __name__=="__main__":
   app.debug = True
