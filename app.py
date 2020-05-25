@@ -51,27 +51,25 @@ class Artist(db.Model):
   email = db.Column(db.String(48), nullable=False)
   password = db.Column(db.String(32), nullable=False)
   admin_artist = db.Column(db.Boolean)
-  children = db.relationship("ArtistContent", backref="artist")
 
   # Below, the __init__ is us stating that for each time we 'instantiate' this class into a variable, we want the 'instance' of this class to be
   # unique to whatever variable we have instantiated the class into. So if a shop has two Owner's, each one would be able to create their own 
   # user information, because each owner would be creating their own 'instance' of a user. Tyson would create his own instance with his own user 
   # credentials, and Joe would create his own instance with his user credentials. They would be totally individual of each other.
 
-  def __init__(self, first_name, last_name, email, password, admin_artist, children):
+  def __init__(self, first_name, last_name, email, password, admin_artist):
     self.first_name = first_name
     self.last_name = last_name
     self.email = email
     self.password = password
     self.admin_artist = admin_artist
-    self.children = children
 
 # Below is our Schema for the Artist class. Marshmallow is the dependency that allows for us to make up a Schema class. The Schema class
 # is what maps out our database model,
 
 class ArtistSchema(ma.Schema):
   class Meta:
-    fields = ("id", "first_name", "last_name", "email", "password", "admin_artist", "children")
+    fields = ("id", "first_name", "last_name", "email", "password", "admin_artist")
 
 # Below, the declared ArtistSchema class has been instantiated into two separate variables. The first, will be used to query for a specific 
 # Artist. The second, is used to query for ALL registered Artists within the database. 
@@ -88,13 +86,11 @@ class ArtistContent(db.Model):
   cover_image = db.Column(db.String(500), nullable=False)
   artist_name = db.Column(db.String(64), nullable=False)
   bio = db.Column(db.String(666), nullable=False)
-  artist_id = db.Column(db.Integer, db.ForeignKey("artist.id"), nullable=False)
 
   def __init__(self, cover_image, artist_name, bio, artist_id):
     self.cover_image = cover_image
     self.artist_name = artist_name
     self.bio = bio
-    self.artist_id = artist_id
 
 # Just like the prior Schema class we built out, the below is a Schema for the ArtistContent class above. 
 # We then take the schema class, and instantiate it into two variables. One to query for a single schema,
@@ -102,7 +98,7 @@ class ArtistContent(db.Model):
 
 class ArtistContentSchema(ma.Schema):
   class Meta:
-    fields = ("id", "cover_image", "artist_name", "bio", "artist_id")
+    fields = ("id", "cover_image", "artist_name", "bio")
 
 content_schema = ArtistContentSchema()
 all_content_schema = ArtistContentSchema(many=True)
@@ -147,16 +143,46 @@ def add_artist():
   email = request.json["email"]
   password = request.json["password"]
   admin_artist = request.json["admin_artist"]
-  children = request.json["children"]
 
-  new_artist = Artist(first_name, last_name, email, password, admin_artist, children)
+  new_artist = Artist(first_name, last_name, email, password, admin_artist)
 
   db.session.add(new_artist)
   db.session.commit()
   
   artist = Artist.query.get(new_artist.id)
-  return todo_schema.jsonify(todo)  
+  return artist_schema.jsonify(artist)
 
+# The below route is called a PATCH route. This allows for artist's to edit pieces of their 
+# identifying information that is stored in this database. Tested in Postman, works as expected.
+
+@app.route("/artist/<id>", methods=["PATCH"])
+def edit_artist(id):
+  artist = Artist.query.get(id)
+  
+  new_first_name = request.json["first_name"]
+  new_last_name = request.json["last_name"]
+  new_email = request.json["email"]
+  new_password = request.json["password"]
+
+  artist.first_name = new_first_name
+  artist.last_name = new_last_name
+  artist.email = new_email
+  artist.password = new_password
+  
+  db.session.commit()
+  return artist_schema.jsonify(artist)
+
+# The below route is a DELETE route, and is used to assist in the removal of any artists/users that
+# may leave the shop for any reason. Tested in Postman and works as expected. 
+
+@app.route("/remove_artist/<id>", methods=["DELETE"])
+def remove_artist(id):
+  artist = Artist.query.get(id)
+
+  db.session.delete(artist)
+  db.session.commit()
+
+  return jsonify("This artist has been removed")
 
 
 if __name__=="__main__":
