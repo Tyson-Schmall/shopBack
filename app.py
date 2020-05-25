@@ -237,7 +237,7 @@ def edit_content():
   return artist_schema.jsonify(content)
 
 # The below route is the DELETE route. It is used to remove artist's content when 
-# necessary from the website. 
+# necessary from the website.... 
 
 @app.route("/remove_content", methods=["DELETE"])
 def remove_content():
