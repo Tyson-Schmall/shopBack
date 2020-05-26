@@ -87,10 +87,10 @@ class ArtistContent(db.Model):
   artist_name = db.Column(db.String(64), nullable=False)
   bio = db.Column(db.String(666), nullable=False)
 
-  def __init__(self, cover_image, artist_name, bio, artist_id):
+  def __init__(self, cover_image, artist_name, bio):
     self.cover_image = cover_image
     self.artist_name = artist_name
-    self.bio = bio
+    self.bio = bio 
 
 # Just like the prior Schema class we built out, the below is a Schema for the ArtistContent class above. 
 # We then take the schema class, and instantiate it into two variables. One to query for a single schema,
@@ -198,8 +198,8 @@ def create_bio():
   db.session.add(new_content)
   db.session.commit()
 
-  content = ArtistContent.query.get(new_conent.id)
-  return all_content_schema.jsonify(content)
+  content = ArtistContent.query.get(new_content.id)
+  return content_schema.jsonify(content)
 
 # Below is the GET route to get a single artist's content by it's id.
 
@@ -239,8 +239,8 @@ def edit_content():
 # The below route is the DELETE route. It is used to remove artist's content when 
 # necessary from the website.... 
 
-@app.route("/remove_content", methods=["DELETE"])
-def remove_content():
+@app.route("/remove_content/<id>", methods=["DELETE"])
+def remove_content(id):
   content = ArtistContent.query.get(id)
 
   db.session.delete(content)
@@ -251,15 +251,3 @@ def remove_content():
 if __name__=="__main__":
   app.debug = True
   app.run()
-
-
-
-
-
-
-
-
-  
-
-
-
